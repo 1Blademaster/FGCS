@@ -20,7 +20,6 @@ def rebootAutopilot() -> None:
     baud = droneStatus.drone.baud
     droneErrorCb = droneStatus.drone.droneErrorCb
     droneDisconnectCb = droneStatus.drone.droneDisconnectCb
-    droneConnectStatusCb = droneStatus.drone.droneConnectStatusCb
     linkDebugStatsCb = droneStatus.drone.linkDebugStatsCb
     fetchingParameterCb = droneStatus.drone.fetchingParameterCb
     forwarding_address = droneStatus.drone.forwarding_address
@@ -54,7 +53,6 @@ def rebootAutopilot() -> None:
             forwarding_address=forwarding_address,
             droneErrorCb=droneErrorCb,
             droneDisconnectCb=droneDisconnectCb,
-            droneConnectStatusCb=droneConnectStatusCb,
             linkDebugStatsCb=linkDebugStatsCb,
             fetchingParameterCb=fetchingParameterCb,
         )

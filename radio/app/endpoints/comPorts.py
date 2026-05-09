@@ -10,7 +10,6 @@ import app.droneStatus as droneStatus
 from app import logger, socketio
 from app.drone import Drone
 from app.utils import (
-    droneConnectStatusCb,
     droneErrorCb,
     fetchingParameterCb,
     getComPortNames,
@@ -157,7 +156,6 @@ def connectToDrone(data: ConnectionDataType) -> None:
             forwarding_address=forwarding_address,
             droneErrorCb=droneErrorCb,
             droneDisconnectCb=disconnectFromDrone,
-            droneConnectStatusCb=droneConnectStatusCb,
             linkDebugStatsCb=sendLinkDebugStats,
             fetchingParameterCb=fetchingParameterCb,
             connectionCancelEvent=cancel_event,

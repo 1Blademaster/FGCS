@@ -4,6 +4,7 @@ import time
 from threading import current_thread
 from typing import TYPE_CHECKING
 
+from app.signals import DroneError
 from app.customTypes import Response
 from app.utils import commandAccepted, sendingCommandLock
 from pymavlink import mavutil
@@ -87,8 +88,11 @@ class ArmController:
 
         except Exception as e:
             self.drone.logger.error(e, exc_info=True)
-            if self.drone.droneErrorCb:
-                self.drone.droneErrorCb(str(e))
+            self.drone.error(str(e))
+
+            ## Or you can have just have:                 (TODO: remove)
+            DroneError.send(self, msg=str(e))
+
             return {
                 "success": False,
                 "message": "Could not arm, serial exception",
