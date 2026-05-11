@@ -19,6 +19,10 @@ class LoiterRadiusDataType(TypedDict):
     radius: float
 
 
+class WaypointRadiusDataType(TypedDict):
+    value: float
+
+
 @socketio.on("get_home_position")
 def getHomePosition() -> None:
     """
@@ -183,3 +187,57 @@ def setLoiterRadius(data: LoiterRadiusDataType) -> None:
     result = droneStatus.drone.navController.setLoiterRadius(radius)
 
     socketio.emit("nav_set_loiter_radius_result", result)
+
+
+@socketio.on("set_waypoint_radius")
+def setWaypointRadius(data: WaypointRadiusDataType) -> None:
+    """
+    Sets the waypoint radius parameter on the drone from the missions or dashboard page.
+    """
+    if droneStatus.state not in ["dashboard", "missions"]:
+        socketio.emit(
+            "params_error",
+            {
+                "message": "You must be on the dashboard or missions screen to set the waypoint radius."
+            },
+        )
+        logger.debug(f"Current state: {droneStatus.state}")
+        return
+
+    if not droneStatus.drone:
+        return notConnectedError(action="set waypoint radius")
+
+    value = data.get("value", None)
+    if value is None or not isinstance(value, (int, float)) or value <= 0:
+        socketio.emit(
+            "params_error",
+            {"message": f"Waypoint radius must be a positive number, got {value}."},
+        )
+        return
+
+    result = droneStatus.drone.navController.setWpRadius(value)
+
+    socketio.emit("set_waypoint_radius_result", result)
+
+
+@socketio.on("get_waypoint_radius")
+def getWaypointRadius() -> None:
+    """
+    Gets the waypoint radius of the drone, only works when the dashboard or missions page is loaded.
+    """
+    if droneStatus.state not in ["dashboard", "missions"]:
+        socketio.emit(
+            "params_error",
+            {
+                "message": "You must be on the dashboard or missions screen to get the waypoint radius."
+            },
+        )
+        logger.debug(f"Current state: {droneStatus.state}")
+        return
+
+    if not droneStatus.drone:
+        return notConnectedError(action="get waypoint radius")
+
+    result = droneStatus.drone.navController.getWpRadius()
+
+    socketio.emit("get_waypoint_radius_result", result)

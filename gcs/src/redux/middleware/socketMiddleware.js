@@ -131,6 +131,7 @@ import {
   emitRefreshParams,
   resetParamsWriteProgressData,
   setAutoPilotRebootModalOpen,
+  setWaypointRadius,
   setFetchingParam,
   setFetchingVars,
   setFetchingVarsProgress,
@@ -171,6 +172,8 @@ const DroneSpecificSocketEvents = Object.freeze({
   onNavRepositionResult: "nav_reposition_result",
   onGetLoiterRadiusResult: "nav_get_loiter_radius_result",
   onSetLoiterRadiusResult: "nav_set_loiter_radius_result",
+  onGetWaypointRadiusResult: "get_waypoint_radius_result",
+  onSetWaypointRadiusResult: "set_waypoint_radius_result",
 })
 
 const ParamSpecificSocketEvents = Object.freeze({
@@ -1082,6 +1085,30 @@ const socketMiddleware = (store) => {
             msg.success
               ? showSuccessNotification(msg.message)
               : showErrorNotification(msg.message)
+          },
+        )
+
+        socket.socket.on(
+          DroneSpecificSocketEvents.onGetWaypointRadiusResult,
+          (msg) => {
+            if (msg.success) {
+              store.dispatch(setWaypointRadius(msg.data))
+            } else {
+              showErrorNotification(msg.message)
+            }
+          },
+        )
+
+        socket.socket.on(
+          DroneSpecificSocketEvents.onSetWaypointRadiusResult,
+          (msg) => {
+            if (msg.success) {
+              showSuccessNotification(msg.message)
+              store.dispatch(setWaypointRadius(msg.data.param_value))
+              store.dispatch(updateParamValue(msg.data))
+            } else {
+              showErrorNotification(msg.message)
+            }
           },
         )
 

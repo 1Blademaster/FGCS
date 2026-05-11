@@ -68,9 +68,11 @@ import {
 import {
   emitExportParamsToFile,
   emitGetParams,
+  emitGetWaypointRadius,
   emitRebootAutopilot,
   emitRefreshParams,
   emitSetMultipleParams,
+  emitSetWaypointRadius,
   setParamsWriteProgressModalOpen,
 } from "../slices/paramsSlice"
 import {
@@ -545,6 +547,18 @@ export function handleEmitters(socket, store, action) {
         })
         store.dispatch(setIsReadingFile(true))
         store.dispatch(setReadFileProgress(null)) // Reset progress when starting new download
+      },
+    },
+    {
+      emitter: emitGetWaypointRadius,
+      callback: () => socket.socket.emit("get_waypoint_radius"),
+    },
+    {
+      emitter: emitSetWaypointRadius,
+      callback: () => {
+        socket.socket.emit("set_waypoint_radius", {
+          value: action.payload,
+        })
       },
     },
   ]

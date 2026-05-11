@@ -27,13 +27,15 @@ import MarkerPin from "./markerPin"
 import MidpointInsertButton from "./midpointInsertButton"
 
 // Tailwind styling
-import { midpoint, point } from "@turf/turf"
+import { circle, midpoint, point } from "@turf/turf"
+import { Layer, Source } from "react-map-gl"
 import resolveConfig from "tailwindcss/resolveConfig"
 import tailwindConfig from "../../../tailwind.config"
+import { selectWaypointRadius } from "../../redux/slices/paramsSlice"
 
 const tailwindColors = resolveConfig(tailwindConfig).theme.colors
 
-export default function MissionItems({ missionItems }) {
+export default function MissionItems({ missionItems, waypointRadius = null }) {
   const dispatch = useDispatch()
   const currentPage = useSelector(selectCurrentPage)
   const editable =
@@ -210,6 +212,36 @@ export default function MissionItems({ missionItems }) {
     ).geometry.coordinates
   }
 
+  const waypointRadiusFromStore = useSelector(selectWaypointRadius)
+
+  const waypointRadiusMeters = useMemo(() => {
+    const valueToUse =
+      waypointRadius !== null && waypointRadius !== undefined
+        ? waypointRadius
+        : waypointRadiusFromStore
+    const parsedValue = Number(valueToUse)
+    const radiusMeters =
+      Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 2
+    return radiusMeters
+  }, [waypointRadius, waypointRadiusFromStore])
+
+  const waypointRadiusGeoJson = useMemo(() => {
+    if (displayedMissionItems.length === 0) return null
+
+    return {
+      type: "FeatureCollection",
+      features: displayedMissionItems.map((item) =>
+        circle([intToCoord(item.y), intToCoord(item.x)], waypointRadiusMeters, {
+          steps: 64,
+          units: "meters",
+          properties: {
+            stroke: "#ffffff",
+          },
+        }),
+      ),
+    }
+  }, [displayedMissionItems, waypointRadiusMeters])
+
   return (
     <>
       {/* Show mission item LABELS */}
@@ -227,6 +259,20 @@ export default function MissionItems({ missionItems }) {
           />
         )
       })}
+
+      {waypointRadiusGeoJson && (
+        <Source type="geojson" data={waypointRadiusGeoJson}>
+          <Layer
+            id="waypoint-radius-border-layer"
+            type="line"
+            paint={{
+              "line-color": "#ffffff",
+              "line-width": 2,
+              "line-dasharray": [4, 4],
+            }}
+          />
+        </Source>
+      )}
 
       {insertionMidpoints.map((midpointItem) => (
         <MidpointInsertButton
