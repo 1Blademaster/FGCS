@@ -180,6 +180,7 @@ const paramsSlice = createSlice({
     emitGetParams: () => {},
     emitRefreshParams: () => {},
     emitSetMultipleParams: () => {},
+    emitSetWaypointRadius: () => {},
     emitExportParamsToFile: () => {},
   },
   selectors: {
@@ -245,6 +246,7 @@ export const {
   emitGetParams,
   emitRefreshParams,
   emitSetMultipleParams,
+  emitSetWaypointRadius,
   emitExportParamsToFile,
 } = paramsSlice.actions
 export const {

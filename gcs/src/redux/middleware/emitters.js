@@ -71,6 +71,7 @@ import {
   emitRebootAutopilot,
   emitRefreshParams,
   emitSetMultipleParams,
+  emitSetWaypointRadius,
   setParamsWriteProgressModalOpen,
 } from "../slices/paramsSlice"
 import {
@@ -545,6 +546,15 @@ export function handleEmitters(socket, store, action) {
         })
         store.dispatch(setIsReadingFile(true))
         store.dispatch(setReadFileProgress(null)) // Reset progress when starting new download
+      },
+    },
+    {
+      emitter: emitSetWaypointRadius,
+      callback: () => {
+        socket.socket.emit("set_waypoint_radius", {
+          param_id: "WPNAV_RADIUS",
+          value: action.payload,
+        })
       },
     },
   ]

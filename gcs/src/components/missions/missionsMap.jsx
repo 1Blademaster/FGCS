@@ -87,6 +87,7 @@ function MapSectionNonMemo({
   rallyItems,
   onDragstart,
   onOpenElevationGraph,
+  waypointRadius,
 }) {
   // Redux
   const dispatch = useDispatch()
@@ -405,7 +406,10 @@ function MapSectionNonMemo({
           dragEndCallback={updatePolygonVertex}
         />
 
-        <MissionItems missionItems={missionItems} />
+        <MissionItems
+          missionItems={missionItems}
+          waypointRadius={waypointRadius}
+        />
 
         <FenceItems fenceItems={fenceItems} />
 

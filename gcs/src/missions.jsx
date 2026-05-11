@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 // 3rd Party Imports
+import { useDebouncedCallback } from "@mantine/hooks"
 import { ResizableBox } from "react-resizable"
 import { v4 as uuidv4 } from "uuid"
 
@@ -67,6 +68,10 @@ import {
   setMissionProgressModal,
   setPlannedHomePosition,
 } from "./redux/slices/missionSlice"
+import {
+  emitSetWaypointRadius,
+  selectSingleParam,
+} from "./redux/slices/paramsSlice"
 const tailwindColors = resolveConfig(tailwindConfig).theme.colors
 
 const coordsFractionDigits = 7
@@ -108,6 +113,17 @@ export default function Missions() {
   const unwrittenChanges = useSelector(selectUnwrittenChanges)
   const missionProgressModalOpened = useSelector(selectMissionProgressModal)
   const missionProgressModalData = useSelector(selectMissionProgressData)
+  const waypointRadiusParam = useSelector((state) =>
+    selectSingleParam(state, "WPNAV_RADIUS"),
+  )
+  const [waypointRadiusInput, setWaypointRadiusInput] = useState(
+    Number(waypointRadiusParam?.param_value ?? 2),
+  )
+
+  const debouncedUpdateWaypointRadius = useDebouncedCallback((value) => {
+    if (!connected || isInvalidInputNumber(value)) return
+    dispatch(emitSetWaypointRadius(value))
+  }, 500)
 
   // Need to keep a reference to the active tab to avoid stale closures
   const activeTabRef = useRef(activeTab)
@@ -139,6 +155,12 @@ export default function Missions() {
       )
     }
   }, [tabsListRef.current])
+
+  useEffect(() => {
+    if (waypointRadiusParam?.param_value !== undefined) {
+      setWaypointRadiusInput(Number(waypointRadiusParam.param_value))
+    }
+  }, [waypointRadiusParam?.param_value])
 
   // Send some messages when file is loaded
   useEffect(() => {
@@ -540,6 +562,28 @@ export default function Missions() {
                 <p className="font-bold">Mission statistics</p>
                 <MissionStatistics />
               </div>
+
+              <Divider className="my-1" />
+
+              <div className="flex flex-col gap-2">
+                <NumberInput
+                  label="WP radius (m)"
+                  value={waypointRadiusInput}
+                  onChange={(val) => {
+                    setWaypointRadiusInput(val)
+                    debouncedUpdateWaypointRadius(val)
+                  }}
+                  onBlur={() => {
+                    if (isInvalidInputNumber(waypointRadiusInput)) {
+                      setWaypointRadiusInput(
+                        Number(waypointRadiusParam?.param_value ?? 2),
+                      )
+                    }
+                  }}
+                  min={0}
+                  hideControls
+                />
+              </div>
             </div>
           </ResizableBox>
 
@@ -552,6 +596,7 @@ export default function Missions() {
                 missionItems={missionItems}
                 fenceItems={fenceItems}
                 rallyItems={rallyItems}
+                waypointRadius={waypointRadiusInput}
                 onOpenElevationGraph={openElevationGraph}
               />
             </div>
