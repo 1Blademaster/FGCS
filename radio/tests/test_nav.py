@@ -3,9 +3,17 @@ import pytest
 from flask_socketio.test_client import SocketIOTestClient
 
 
+@pytest.fixture(autouse=True)
+def restore_state():
+    original_state = droneStatus.state
+    yield
+    droneStatus.state = original_state
+
+
 @pytest.fixture()
 def restore_wp_radius():
     drone = droneStatus.drone
+    assert drone is not None
     original = drone.navController.getWpRadius().get("data")
     yield
     if original is not None:
@@ -15,8 +23,10 @@ def restore_wp_radius():
 def test_set_waypoint_radius_success(
     socketio_client: SocketIOTestClient, restore_wp_radius
 ):
+    drone = droneStatus.drone
+    assert drone is not None
     droneStatus.state = "missions"
-    expected_param = droneStatus.drone.navController._getWpRadiusParamName()
+    expected_param = drone.navController._getWpRadiusParamName()
 
     socketio_client.emit("set_waypoint_radius", {"value": 5})
     response = socketio_client.get_received()[0]

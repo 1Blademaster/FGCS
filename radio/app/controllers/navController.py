@@ -403,7 +403,9 @@ class NavController:
             Response: The response from the get waypoint radius command
         """
 
-        wp_radius_data = self.drone.paramsController.getSingleParam("WP_RADIUS")
+        wp_radius_data = self.drone.paramsController.getSingleParam(
+            self._getWpRadiusParamName()
+        )
 
         if wp_radius_data.get("param_value") is None:
             self.drone.logger.warning("Waypoint radius parameter not found in cache")
@@ -422,7 +424,9 @@ class NavController:
         Set the waypoint radius of the drone.
         """
         param_name = self._getWpRadiusParamName()
-        param_set_success = self.drone.paramsController.setParam(param_name, value)
+        param_set_success = self.drone.paramsController.setParam(
+            param_name, value, mavutil.mavlink.MAV_PARAM_TYPE_FLOAT
+        )
 
         if param_set_success:
             self.drone.logger.info(f"Waypoint radius set to {value}m")
