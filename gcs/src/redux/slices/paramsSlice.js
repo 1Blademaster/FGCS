@@ -28,6 +28,7 @@ const paramsSlice = createSlice({
     fetchParamsWarningModalOpen: false,
     rebootPromptModalOpen: false,
     pendingFetchAction: null,
+    waypointRadius: null,
   },
   reducers: {
     setRebootData: (state, action) => {
@@ -175,11 +176,16 @@ const paramsSlice = createSlice({
       state.pendingFetchAction = action.payload
     },
 
+    setWaypointRadius: (state, action) => {
+      state.waypointRadius = action.payload
+    },
+
     // Emitters (empty objects to be captured in the middleware)
     emitRebootAutopilot: () => {},
     emitGetParams: () => {},
     emitRefreshParams: () => {},
     emitSetMultipleParams: () => {},
+    emitGetWaypointRadius: () => {},
     emitSetWaypointRadius: () => {},
     emitExportParamsToFile: () => {},
   },
@@ -211,6 +217,7 @@ const paramsSlice = createSlice({
       state.fetchParamsWarningModalOpen,
     selectRebootPromptModalOpen: (state) => state.rebootPromptModalOpen,
     selectPendingFetchAction: (state) => state.pendingFetchAction,
+    selectWaypointRadius: (state) => state.waypointRadius,
   },
 })
 
@@ -242,10 +249,12 @@ export const {
   setFetchParamsWarningModalOpen,
   setRebootPromptModalOpen,
   setPendingFetchAction,
+  setWaypointRadius,
   emitRebootAutopilot,
   emitGetParams,
   emitRefreshParams,
   emitSetMultipleParams,
+  emitGetWaypointRadius,
   emitSetWaypointRadius,
   emitExportParamsToFile,
 } = paramsSlice.actions
@@ -272,6 +281,7 @@ export const {
   selectFetchParamsWarningModalOpen,
   selectRebootPromptModalOpen,
   selectPendingFetchAction,
+  selectWaypointRadius,
 } = paramsSlice.selectors
 
 export default paramsSlice

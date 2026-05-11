@@ -68,6 +68,7 @@ import {
 import {
   emitExportParamsToFile,
   emitGetParams,
+  emitGetWaypointRadius,
   emitRebootAutopilot,
   emitRefreshParams,
   emitSetMultipleParams,
@@ -549,10 +550,13 @@ export function handleEmitters(socket, store, action) {
       },
     },
     {
+      emitter: emitGetWaypointRadius,
+      callback: () => socket.socket.emit("get_waypoint_radius"),
+    },
+    {
       emitter: emitSetWaypointRadius,
       callback: () => {
         socket.socket.emit("set_waypoint_radius", {
-          param_id: "WPNAV_RADIUS",
           value: action.payload,
         })
       },

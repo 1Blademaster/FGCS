@@ -5,7 +5,7 @@ from threading import current_thread
 from typing import TYPE_CHECKING
 
 import serial
-from app.customTypes import Response
+from app.customTypes import Number, Response, VehicleType
 from app.utils import commandAccepted, sendingCommandLock
 from pymavlink import mavutil
 
@@ -378,4 +378,61 @@ class NavController:
             return {
                 "success": False,
                 "message": f"Failed to set loiter radius set to {radius}m",
+            }
+
+    def _getWpRadiusParamName(self) -> str:
+        """
+        Determine the correct waypoint radius parameter name based on aircraft type and firmware version.
+        """
+        if self.drone.aircraft_type == VehicleType.FIXED_WING.value:
+            return "WP_RADIUS"
+
+        if self.drone.aircraft_type == VehicleType.MULTIROTOR.value:
+            version = getattr(self.drone, "flight_sw_version", None)
+            if not version or len(version) < 2 or version[0] != 4 or version[1] < 7:
+                return "WPNAV_RADIUS"
+            return "WP_RADIUS_M"
+
+        return "WP_RADIUS"
+
+    def getWpRadius(self) -> Response:
+        """
+        Get the waypoint radius of the drone from the cached parameters.
+
+        Returns:
+            Response: The response from the get waypoint radius command
+        """
+
+        wp_radius_data = self.drone.paramsController.getSingleParam("WP_RADIUS")
+
+        if wp_radius_data.get("param_value") is None:
+            self.drone.logger.warning("Waypoint radius parameter not found in cache")
+            return {
+                "success": False,
+                "message": "Waypoint radius parameter not found in cache",
+            }
+
+        return {
+            "success": True,
+            "data": wp_radius_data.get("param_value", 2),  # Default to 2m
+        }
+
+    def setWpRadius(self, value: Number) -> Response:
+        """
+        Set the waypoint radius of the drone.
+        """
+        param_name = self._getWpRadiusParamName()
+        param_set_success = self.drone.paramsController.setParam(param_name, value)
+
+        if param_set_success:
+            self.drone.logger.info(f"Waypoint radius set to {value}m")
+            return {
+                "success": True,
+                "message": f"Waypoint radius set to {value}m",
+                "data": {"param_id": param_name, "param_value": value},
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Failed to set waypoint radius to {value}m",
             }

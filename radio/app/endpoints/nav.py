@@ -2,7 +2,6 @@ from typing_extensions import TypedDict
 
 import app.droneStatus as droneStatus
 from app import logger, socketio
-from app.customTypes import VehicleType
 from app.utils import notConnectedError
 
 
@@ -190,22 +189,6 @@ def setLoiterRadius(data: LoiterRadiusDataType) -> None:
     socketio.emit("nav_set_loiter_radius_result", result)
 
 
-def _get_waypoint_radius_param_name(drone) -> str:
-    """
-    Determine the correct waypoint radius parameter name based on aircraft type and firmware version.
-    """
-    if drone.aircraft_type == VehicleType.FIXED_WING.value:
-        return "WP_RADIUS"
-
-    if drone.aircraft_type == VehicleType.MULTIROTOR.value:
-        version = getattr(drone, "flight_sw_version", None)
-        if not version or len(version) < 2 or version[0] != 4 or version[1] < 7:
-            return "WPNAV_RADIUS"
-        return "WP_RADIUS_M"
-
-    return "WP_RADIUS"
-
-
 @socketio.on("set_waypoint_radius")
 def setWaypointRadius(data: WaypointRadiusDataType) -> None:
     """
@@ -232,24 +215,29 @@ def setWaypointRadius(data: WaypointRadiusDataType) -> None:
         )
         return
 
-    param_name = _get_waypoint_radius_param_name(droneStatus.drone)
-    success = droneStatus.drone.paramsController.setParam(param_name, value, None)
-    if success:
-        socketio.emit(
-            "param_set_success",
-            {
-                "success": True,
-                "message": f"Set {param_name} to {value} successfully.",
-                "data": {
-                    "params_set_successfully": [
-                        {"param_id": param_name, "param_value": value},
-                    ],
-                    "params_could_not_set": [],
-                },
-            },
-        )
-    else:
+    result = droneStatus.drone.navController.setWpRadius(value)
+
+    socketio.emit("set_waypoint_radius_result", result)
+
+
+@socketio.on("get_waypoint_radius")
+def getWaypointRadius() -> None:
+    """
+    Gets the waypoint radius of the drone, only works when the dashboard or missions page is loaded.
+    """
+    if droneStatus.state not in ["dashboard", "missions"]:
         socketio.emit(
             "params_error",
-            {"message": f"Failed to set {param_name} to {value}."},
+            {
+                "message": "You must be on the dashboard or missions screen to get the waypoint radius."
+            },
         )
+        logger.debug(f"Current state: {droneStatus.state}")
+        return
+
+    if not droneStatus.drone:
+        return notConnectedError(action="get waypoint radius")
+
+    result = droneStatus.drone.navController.getWpRadius()
+
+    socketio.emit("get_waypoint_radius_result", result)

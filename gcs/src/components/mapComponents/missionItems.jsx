@@ -31,7 +31,7 @@ import { circle, midpoint, point } from "@turf/turf"
 import { Layer, Source } from "react-map-gl"
 import resolveConfig from "tailwindcss/resolveConfig"
 import tailwindConfig from "../../../tailwind.config"
-import { selectSingleParam } from "../../redux/slices/paramsSlice"
+import { selectWaypointRadius } from "../../redux/slices/paramsSlice"
 
 const tailwindColors = resolveConfig(tailwindConfig).theme.colors
 
@@ -212,20 +212,18 @@ export default function MissionItems({ missionItems, waypointRadius = null }) {
     ).geometry.coordinates
   }
 
-  const waypointRadiusParam = useSelector((state) =>
-    selectSingleParam(state, "WPNAV_RADIUS"),
-  )
+  const waypointRadiusFromStore = useSelector(selectWaypointRadius)
 
   const waypointRadiusMeters = useMemo(() => {
     const valueToUse =
       waypointRadius !== null && waypointRadius !== undefined
         ? waypointRadius
-        : Number(waypointRadiusParam?.param_value)
+        : waypointRadiusFromStore
     const parsedValue = Number(valueToUse)
-    const diameter =
+    const radiusMeters =
       Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 2
-    return diameter / 2
-  }, [waypointRadius, waypointRadiusParam?.param_value])
+    return radiusMeters
+  }, [waypointRadius, waypointRadiusFromStore])
 
   const waypointRadiusGeoJson = useMemo(() => {
     if (displayedMissionItems.length === 0) return null

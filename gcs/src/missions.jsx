@@ -69,8 +69,9 @@ import {
   setPlannedHomePosition,
 } from "./redux/slices/missionSlice"
 import {
+  emitGetWaypointRadius,
   emitSetWaypointRadius,
-  selectSingleParam,
+  selectWaypointRadius,
 } from "./redux/slices/paramsSlice"
 const tailwindColors = resolveConfig(tailwindConfig).theme.colors
 
@@ -113,11 +114,9 @@ export default function Missions() {
   const unwrittenChanges = useSelector(selectUnwrittenChanges)
   const missionProgressModalOpened = useSelector(selectMissionProgressModal)
   const missionProgressModalData = useSelector(selectMissionProgressData)
-  const waypointRadiusParam = useSelector((state) =>
-    selectSingleParam(state, "WPNAV_RADIUS"),
-  )
+  const waypointRadius = useSelector(selectWaypointRadius)
   const [waypointRadiusInput, setWaypointRadiusInput] = useState(
-    Number(waypointRadiusParam?.param_value ?? 2),
+    waypointRadius ?? 2,
   )
 
   const debouncedUpdateWaypointRadius = useDebouncedCallback((value) => {
@@ -157,14 +156,15 @@ export default function Missions() {
   }, [tabsListRef.current])
 
   useEffect(() => {
-    if (waypointRadiusParam?.param_value !== undefined) {
-      setWaypointRadiusInput(Number(waypointRadiusParam.param_value))
+    if (waypointRadius !== null && waypointRadius !== undefined) {
+      setWaypointRadiusInput(waypointRadius)
     }
-  }, [waypointRadiusParam?.param_value])
+  }, [waypointRadius])
 
   // Send some messages when file is loaded
   useEffect(() => {
     dispatch(emitGetTargetInfo())
+    dispatch(emitGetWaypointRadius())
   }, [currentPage])
 
   useEffect(() => {
@@ -575,12 +575,10 @@ export default function Missions() {
                   }}
                   onBlur={() => {
                     if (isInvalidInputNumber(waypointRadiusInput)) {
-                      setWaypointRadiusInput(
-                        Number(waypointRadiusParam?.param_value ?? 2),
-                      )
+                      setWaypointRadiusInput(waypointRadius ?? 2)
                     }
                   }}
-                  min={0}
+                  min={1}
                   hideControls
                 />
               </div>
